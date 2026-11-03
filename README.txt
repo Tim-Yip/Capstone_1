@@ -1,0 +1,1 @@
+In this project, I will be using SQL and Excel to analyse sales data for EmporiUm in the state of Texas, answer questions related to sales, then create visuals that effectively communicate my findings. 
