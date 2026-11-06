@@ -14,7 +14,6 @@ JOIN store_locations sl
 WHERE sl.State = 'Texas';
 
 -- What is the revenue breakdown by year and month for the sales territory?
--- Total revenue in Texas for each month of each year. 
 SELECT
 YEAR(Transaction_Date) 'Year',
 MONTH(Transaction_Date) 'Month',
@@ -26,17 +25,6 @@ WHERE sl.State = 'Texas'
 GROUP BY 
 	YEAR(Transaction_Date),
     MONTH(Transaction_Date);
-    
--- Total revenue in Texas for each specific year.
-SELECT
-	YEAR(Transaction_Date) 'Year',
-    SUM(Sale_Amount) Total_Sales
-FROM store_sales ss
-JOIN store_locations sl
-	ON ss.Store_ID = sl.StoreID
-WHERE sl.State = 'Texas'
-GROUP BY 
-	YEAR(Transaction_Date);
 
 -- Provide a comparison of total revenue for the specific sales territory and the region it belongs to.
 -- Texas sales: $3,417,850.01
@@ -71,7 +59,7 @@ JOIN products p
 	ON p.ProdNum = ss.Prod_Num
 JOIN inventory_categories ic
 	ON ic.Categoryid = p.Categoryid
-WHERE State = 'Texas'
+WHERE sl.State = 'Texas'
 GROUP BY
 	YEAR(Transaction_Date),
     MONTH(Transaction_Date),
@@ -85,11 +73,53 @@ SELECT
     FROM store_locations sl
     JOIN store_sales ss
 		ON sl.StoreID = ss.Store_ID
-	WHERE State = 'Texas'
+	WHERE sl.State = 'Texas'
     GROUP BY 
 		StoreLocation,
         StoreID
     ORDER BY TotalSales DESC;
 
 -- What is your recommendation for where to focus sales attention in the next quarter?
--- I would focus more on sales for the store located in Dallas because their total sales are very low only coming out to $54,444.05 while other stores are pulling in at least $260k or more in Texas. 
+/*
+I would focus more on sales for the store located in Dallas because their total sales are very low only coming out to $54,444.05
+while other stores are pulling in at least $260k or more in Texas. The data shows that the average transaction amount in Dallas are
+comparable to other store locations. However, Dallas has significantly fewer total transactions accross all categories.
+Another area I would focus on is the store located in Georgetown. It shows that there are no sales for art supplies and merchandise.
+While their overall sales are not falling behind too much compared to other stores, missing these items can be a reason why the average total sales
+is slightly lower. 
+*/
+
+-- Extra: Sales by store and product category in Texas.
+SELECT
+	sl.StoreID,
+    sl.StoreLocation,
+    ic.Category,
+    SUM(ss.Sale_Amount) TotalSales,
+    ROUND(AVG(ss.Sale_Amount), 2) AverageSales,
+    COUNT(*) TotalTransactions
+FROM store_sales ss
+JOIN store_locations sl
+	ON ss.Store_ID = sl.StoreID
+JOIN products p
+	ON ss.Prod_Num = p.ProdNum
+JOIN inventory_categories ic
+	ON p.CategoryID = ic.CategoryID
+WHERE sl.State = 'Texas'
+GROUP BY
+	sl.StoreID,
+    sl.StoreLocation,
+    ic.Category
+ORDER BY
+	sl.StoreLocation,
+    ic.Category;
+    
+-- Checks if Dallas was present during all years.
+SELECT
+	SUM(ss.Sale_Amount) TotalSales,
+    YEAR(ss.Transaction_Date) 'Year'
+FROM store_sales ss
+JOIN store_locations sl
+	ON ss.Store_ID = sl.StoreID
+WHERE sl.State = 'Texas'
+GROUP BY 
+    YEAR(ss.Transaction_Date);
